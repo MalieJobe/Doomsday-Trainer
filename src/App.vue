@@ -32,6 +32,7 @@
       }"
       :disabled="status !== ''"
       class="btn-secondary"
+      type="button"
     >
       {{ weekday }}
     </button>
@@ -64,7 +65,7 @@ import { computed, ref } from "vue";
 const status = ref<"" | "Correct!" | "Incorrect!">("");
 const currentGuess = ref<number | null>(null);
 const streak = ref<number>(0);
-const stopwatch = ref<number>(58);
+const stopwatch = ref<number>(0);
 const bestGuessTime = ref<number>(0);
 const date = ref(getRandomDate(1900, 2100));
 const dateString = computed(() => {
@@ -214,6 +215,14 @@ button:disabled {
   box-shadow: none;
 }
 
+button:hover {
+  box-shadow: 7px 7px 5px rgb(0 0 0 / 40%);
+}
+
+button:disabled:hover {
+  box-shadow: none;
+}
+
 button.inactive {
   background-color: #999999;
   cursor: not-allowed;
@@ -248,5 +257,10 @@ button.correctanswer {
 
 footer {
   margin-top: 4rem;
+  text-align: left;
+}
+
+p {
+  text-align: justify;
 }
 </style>
