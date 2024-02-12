@@ -1,9 +1,7 @@
 <template>
-  <h1>Doomsday Trainer</h1>
-  <time :datetime="dateString"
-    ><strong>{{ dateString }}</strong></time
-  >
-  <table style="text-align: left; width: 100%">
+  <h1 class="title">Doomsday Trainer</h1>
+  <time :datetime="dateString" class="date">{{ dateString }}</time>
+  <table class="stats">
     <tr>
       <th scope="col">Stopwatch</th>
       <th scope="col">Best Guess</th>
@@ -30,34 +28,37 @@
       <td>{{ status }}</td>
     </tr>
   </table>
-  <div class="weekday_selection">
+  <div class="options">
     <button
       v-for="(weekday, index) in weekdays"
       :key="index"
       @click="guess(index)"
       :class="{ inactive: wrongGuesses.includes(index) }"
+      class="btn-secondary"
     >
       {{ weekday }}
     </button>
   </div>
   <button
-    id="next"
+    class="btn-primary"
     :class="{ inactive: status !== 'Correct!' }"
     @click="nextDate()"
   >
     Next Date
   </button>
-  <h2>How does this work?</h2>
-  <p>
-    Check out Numberphiles
-    <a
-      href="https://www.youtube.com/watch?v=z2x3SSBVGJU&ab_channel=Numberphile"
-      target="_blank"
-      >The Doomsday Algorithm</a
-    >
-    on Youtube. With some basic math and some practice you'll be able to tell
-    the weekday of any Date given to you
-  </p>
+  <footer>
+    <h2 class="subtitle">How does this work?</h2>
+    <p>
+      Check out Numberphiles
+      <a
+        href="https://www.youtube.com/watch?v=z2x3SSBVGJU&ab_channel=Numberphile"
+        target="_blank"
+        >"The Doomsday Algorithm" on Youtube</a
+      >
+      . With some basic math and some practice you'll be able to tell the
+      weekday of any Date given to you
+    </p>
+  </footer>
 </template>
 
 <script setup lang="ts">
@@ -76,7 +77,7 @@ const dateString = computed(() => {
   });
 });
 
-const stopWatchInterval = setInterval(() => {
+setInterval(() => {
   stopwatch.value += 1;
 }, 1000);
 
@@ -122,67 +123,107 @@ function getRandomDate(startYear: number, endYear: number) {
 
 <style>
 :root {
-  --text: #240e03;
-  --background: #ffebe0;
-  --primary: #ee5719;
-  --secondary: #c0f471;
-  --accent: #7df258;
+  --text: #020f0d;
+  --background: #f5fdfc;
+  --primary: #25dec4;
+  --secondary: #90a1ee;
+  --accent: #6d52e4;
 }
 
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin: 60px auto 0;
+  margin: 0 auto;
   max-width: 400px;
   display: block;
-  text-align: center;
+  padding: 0 1rem;
 }
 
 body {
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
   font-size: 16px;
   line-height: 1.2;
   color: var(--text);
   background-color: var(--background);
+  margin: 0;
 }
 
-.weekday_selection {
+.title {
+  font-size: 1.5rem;
+  color: var(--text);
+  padding: 1rem 0;
+  margin-top: 0;
+  border-bottom: 1px solid;
+}
+
+.date {
+  font-weight: bold;
+  font-size: 2rem;
+  color: var(--accent);
+  margin: 2rem auto 1rem;
+  display: inline-block;
+}
+
+.stats {
+  width: 100%;
+  border: 1px solid;
+  margin-bottom: 3rem;
+}
+
+td:not(:first-child),
+th:not(:first-child) {
+  border-left: 1px solid;
+}
+th {
+  border-bottom: 1px solid;
+}
+
+.options {
   display: flex;
   flex-direction: row;
-  columns: 2;
-  gap: 0.5rem;
+  gap: 1rem;
   flex-wrap: wrap;
+  margin-bottom: 3rem;
 }
 
-.weekday_selection button {
+button {
   display: block;
   margin: auto;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   font-size: 1.5rem;
-  background-color: var(--accent);
-  color: var(--background);
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
-  transition: box-shadow 0.2s;
-  flex-basis: 48%;
+  transition: all 0.2s;
+  box-shadow: 4px 4px 5px rgb(0 0 0 / 30%);
 }
 
-.weekday_selection button.inactive {
-  background-color: grey;
+button.inactive {
+  background-color: #999999;
   cursor: not-allowed;
+  box-shadow: none;
+  color: var(--text);
 }
 
-.weekday_selection button:hover {
-  box-shadow: rgb(0, 0, 0, 0.7) 3px 3px 8px;
+.btn-secondary {
+  border: 1px solid black;
+  color: var(--accent);
+  transition: box-shadow 0.2s;
 }
 
-time {
-  font-size: 2rem;
-  color: var(--primary);
-  margin-bottom: 2rem;
-  display: inline-block;
+.options button {
+  flex-basis: calc(50% - 0.5rem); /* because of flex gap */
+}
+
+.options button:first-child {
+  flex-basis: 55%; /* so sunday is on top */
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--background);
+}
+
+footer {
+  margin-top: 4rem;
 }
 </style>
