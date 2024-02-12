@@ -10,22 +10,12 @@
     </tr>
 
     <tr>
+      <td>{{ formatTime(stopwatch) }}</td>
       <td>
-        {{
-          stopwatch < 60
-            ? stopwatch
-            : Math.floor(stopwatch / 60) + "m " + (stopwatch % 60)
-        }}s
-      </td>
-      <td>
-        {{
-          bestGuessTime < 60
-            ? bestGuessTime
-            : Math.floor(bestGuessTime / 60) + "m " + (bestGuessTime % 60)
-        }}s
+        {{ formatTime(bestGuessTime) }}
       </td>
       <td>{{ streak }}</td>
-      <td>{{ status }}</td>
+      <td :class="{ wrong: status === 'Incorrect!' }">{{ status }}</td>
     </tr>
   </table>
   <div class="options">
@@ -33,7 +23,14 @@
       v-for="(weekday, index) in weekdays"
       :key="index"
       @click="guess(index)"
-      :class="{ inactive: wrongGuesses.includes(index) }"
+      :class="{
+        inactive:
+          date.getDay() !== index &&
+          index === currentGuess &&
+          status == 'Incorrect!',
+        correctanswer: date.getDay() === index && status !== '',
+      }"
+      :disabled="status !== ''"
       class="btn-secondary"
     >
       {{ weekday }}
@@ -41,7 +38,7 @@
   </div>
   <button
     class="btn-primary"
-    :class="{ inactive: status !== 'Correct!' }"
+    :class="{ inactive: status === '' }"
     @click="nextDate()"
   >
     Next Date
@@ -62,9 +59,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, ref } from "vue";
 
 const status = ref<"" | "Correct!" | "Incorrect!">("");
+const currentGuess = ref<number | null>(null);
 const streak = ref<number>(0);
 const stopwatch = ref<number>(58);
 const bestGuessTime = ref<number>(0);
@@ -77,11 +75,9 @@ const dateString = computed(() => {
   });
 });
 
-setInterval(() => {
+let intervalReference = setInterval(() => {
   stopwatch.value += 1;
 }, 1000);
-
-const wrongGuesses = reactive<Array<number>>([]);
 
 const weekdays = [
   "Sunday",
@@ -93,22 +89,33 @@ const weekdays = [
   "Saturday",
 ];
 
+function formatTime(seconds: number): string {
+  // e.g. 1m 31s
+  if (seconds < 60) return seconds + "s";
+  else return Math.floor(seconds / 60) + "m " + (seconds % 60) + "s";
+}
+
 function guess(weekday: number) {
+  currentGuess.value = weekday;
+  clearInterval(intervalReference);
   if (date.value.getDay() === weekday) {
     status.value = "Correct!";
+    streak.value += 1;
     if (stopwatch.value > bestGuessTime.value)
       bestGuessTime.value = stopwatch.value;
   } else {
-    wrongGuesses.push(weekday);
     status.value = "Incorrect!";
   }
 }
 
 function nextDate() {
+  if (status.value === "Incorrect!") streak.value = 0; // reset here and not right after guess so user has time to see result
   date.value = getRandomDate(1900, 2100);
-  wrongGuesses.splice(0);
   status.value = "";
   stopwatch.value = 0;
+  intervalReference = setInterval(() => {
+    stopwatch.value += 1;
+  }, 1000);
 }
 
 function getRandomDate(startYear: number, endYear: number) {
@@ -117,6 +124,7 @@ function getRandomDate(startYear: number, endYear: number) {
   const randomTimestamp = Math.floor(
     Math.random() * (endTimestamp - startTimestamp + 1) + startTimestamp
   );
+  console.log(new Date(randomTimestamp));
   return new Date(randomTimestamp);
 }
 </script>
@@ -165,16 +173,20 @@ body {
 
 .stats {
   width: 100%;
-  border: 1px solid;
+  border: 1px solid var(--text);
   margin-bottom: 3rem;
 }
 
 td:not(:first-child),
 th:not(:first-child) {
-  border-left: 1px solid;
+  border-left: 1px solid var(--text);
 }
 th {
-  border-bottom: 1px solid;
+  border-bottom: 1px solid var(--text);
+}
+
+.wrong {
+  color: red;
 }
 
 .options {
@@ -197,11 +209,22 @@ button {
   box-shadow: 4px 4px 5px rgb(0 0 0 / 30%);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 button.inactive {
   background-color: #999999;
   cursor: not-allowed;
   box-shadow: none;
   color: var(--text);
+}
+
+button.correctanswer {
+  background: turquoise;
+  color: black;
+  font-weight: bold;
 }
 
 .btn-secondary {
