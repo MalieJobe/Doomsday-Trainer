@@ -5,14 +5,13 @@
   >
   <table style="text-align: left; width: 100%">
     <tr>
-      <th scope="col">Status</th>
-      <th scope="col">Streak</th>
       <th scope="col">Stopwatch</th>
+      <th scope="col">Best Guess</th>
+      <th scope="col">Streak</th>
+      <th scope="col">Status</th>
     </tr>
 
     <tr>
-      <td>{{ status }}</td>
-      <td>{{ streak }}</td>
       <td>
         {{
           stopwatch < 60
@@ -20,6 +19,15 @@
             : Math.floor(stopwatch / 60) + "m " + (stopwatch % 60)
         }}s
       </td>
+      <td>
+        {{
+          bestGuessTime < 60
+            ? bestGuessTime
+            : Math.floor(bestGuessTime / 60) + "m " + (bestGuessTime % 60)
+        }}s
+      </td>
+      <td>{{ streak }}</td>
+      <td>{{ status }}</td>
     </tr>
   </table>
   <div class="weekday_selection">
@@ -53,11 +61,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 
 const status = ref<"" | "Correct!" | "Incorrect!">("");
 const streak = ref<number>(0);
 const stopwatch = ref<number>(58);
+const bestGuessTime = ref<number>(0);
 const date = ref(getRandomDate(1900, 2100));
 const dateString = computed(() => {
   return date.value.toLocaleString("en-us", {
@@ -67,9 +76,7 @@ const dateString = computed(() => {
   });
 });
 
-let stopWatchInterval;
-
-stopWatchInterval = setInterval(() => {
+const stopWatchInterval = setInterval(() => {
   stopwatch.value += 1;
 }, 1000);
 
@@ -86,8 +93,11 @@ const weekdays = [
 ];
 
 function guess(weekday: number) {
-  if (date.value.getDay() === weekday) status.value = "Correct!";
-  else {
+  if (date.value.getDay() === weekday) {
+    status.value = "Correct!";
+    if (stopwatch.value > bestGuessTime.value)
+      bestGuessTime.value = stopwatch.value;
+  } else {
     wrongGuesses.push(weekday);
     status.value = "Incorrect!";
   }
