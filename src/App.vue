@@ -1,25 +1,79 @@
 <template>
   <h1>Doomsday Trainer</h1>
-  <time :datetime="date.toString()">{{
-    date.toLocaleString("en-us", {
-      month: "short",
-      year: "numeric",
-      day: "numeric",
-    })
-  }}</time>
+  <time :datetime="dateString"
+    ><strong>{{ dateString }}</strong></time
+  >
+  <table style="text-align: left; width: 100%">
+    <tr>
+      <th scope="col">Status</th>
+      <th scope="col">Streak</th>
+      <th scope="col">Stopwatch</th>
+    </tr>
+
+    <tr>
+      <td>{{ status }}</td>
+      <td>{{ streak }}</td>
+      <td>
+        {{
+          stopwatch < 60
+            ? stopwatch
+            : Math.floor(stopwatch / 60) + "m " + (stopwatch % 60)
+        }}s
+      </td>
+    </tr>
+  </table>
   <div class="weekday_selection">
     <button
       v-for="(weekday, index) in weekdays"
       :key="index"
       @click="guess(index)"
+      :class="{ inactive: wrongGuesses.includes(index) }"
     >
       {{ weekday }}
     </button>
   </div>
+  <button
+    id="next"
+    :class="{ inactive: status !== 'Correct!' }"
+    @click="nextDate()"
+  >
+    Next Date
+  </button>
+  <h2>How does this work?</h2>
+  <p>
+    Check out Numberphiles
+    <a
+      href="https://www.youtube.com/watch?v=z2x3SSBVGJU&ab_channel=Numberphile"
+      target="_blank"
+      >The Doomsday Algorithm</a
+    >
+    on Youtube. With some basic math and some practice you'll be able to tell
+    the weekday of any Date given to you
+  </p>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { computed, defineComponent, reactive, ref } from "vue";
+
+const status = ref<"" | "Correct!" | "Incorrect!">("");
+const streak = ref<number>(0);
+const stopwatch = ref<number>(58);
+const date = ref(getRandomDate(1900, 2100));
+const dateString = computed(() => {
+  return date.value.toLocaleString("en-us", {
+    month: "short",
+    year: "numeric",
+    day: "numeric",
+  });
+});
+
+let stopWatchInterval;
+
+stopWatchInterval = setInterval(() => {
+  stopwatch.value += 1;
+}, 1000);
+
+const wrongGuesses = reactive<Array<number>>([]);
 
 const weekdays = [
   "Sunday",
@@ -32,30 +86,37 @@ const weekdays = [
 ];
 
 function guess(weekday: number) {
-  console.log(weekdays[weekday]);
+  if (date.value.getDay() === weekday) status.value = "Correct!";
+  else {
+    wrongGuesses.push(weekday);
+    status.value = "Incorrect!";
+  }
 }
 
-export default defineComponent({
-  setup() {
-    const date = ref(new Date());
+function nextDate() {
+  date.value = getRandomDate(1900, 2100);
+  wrongGuesses.splice(0);
+  status.value = "";
+  stopwatch.value = 0;
+}
 
-    return {
-      date,
-      weekdays,
-      guess,
-    };
-  },
-  name: "App",
-});
+function getRandomDate(startYear: number, endYear: number) {
+  const startTimestamp = new Date(`${startYear}-01-01`).getTime();
+  const endTimestamp = new Date(`${endYear}-12-31`).getTime();
+  const randomTimestamp = Math.floor(
+    Math.random() * (endTimestamp - startTimestamp + 1) + startTimestamp
+  );
+  return new Date(randomTimestamp);
+}
 </script>
 
-<style lang="scss">
+<style>
 :root {
-  --text: #130206;
-  --background: #fef6f8;
-  --primary: #ec1a54;
-  --secondary: #87f5dc;
-  --accent: #5872f1;
+  --text: #240e03;
+  --background: #ffebe0;
+  --primary: #ee5719;
+  --secondary: #c0f471;
+  --accent: #7df258;
 }
 
 #app {
@@ -65,7 +126,7 @@ export default defineComponent({
   text-align: center;
   color: #2c3e50;
   margin: 60px auto 0;
-  max-width: 500px;
+  max-width: 400px;
   display: block;
   text-align: center;
 }
@@ -79,9 +140,10 @@ body {
 
 .weekday_selection {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   columns: 2;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .weekday_selection button {
@@ -95,6 +157,12 @@ body {
   border-radius: 0.25rem;
   cursor: pointer;
   transition: box-shadow 0.2s;
+  flex-basis: 48%;
+}
+
+.weekday_selection button.inactive {
+  background-color: grey;
+  cursor: not-allowed;
 }
 
 .weekday_selection button:hover {
